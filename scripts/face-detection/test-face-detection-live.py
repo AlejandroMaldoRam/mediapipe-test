@@ -12,7 +12,7 @@ import cv2
 from typing import Tuple, Union
 
  # Configure model
-model_path = "D:\Code\mediapipe-test\models\blaze_face_short_range.tflite"
+model_path = "D:/Code/mediapipe-test/models/blaze_face_short_range.tflite"
 
 BaseOptions = mp.tasks.BaseOptions
 FaceDetector = mp.tasks.vision.FaceDetector
