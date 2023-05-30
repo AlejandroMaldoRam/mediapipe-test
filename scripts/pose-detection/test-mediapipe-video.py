@@ -32,7 +32,7 @@ def draw_landmarks_on_image(rgb_image, detection_result):
 if __name__ == '__main__':
     
     # Configure model
-    base_options = python.BaseOptions(model_asset_path='../models/pose_landmarker_heavy.task')
+    base_options = python.BaseOptions(model_asset_path='../../models/pose_landmarker_heavy.task')
     options = vision.PoseLandmarkerOptions(base_options=base_options,output_segmentation_masks=True)
     detector = vision.PoseLandmarker.create_from_options(options)
 
@@ -43,12 +43,12 @@ if __name__ == '__main__':
         ret, img = cap.read()
 
         #image = mp.Image.create_from_file("../data/image.jpg")
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img)
-        detection_result = detector.detect(mp_image)
-        annotated_image = draw_landmarks_on_image(mp_image.numpy_view(), detection_result)
+        #mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img)
+        #detection_result = detector.detect(mp_image)
+        #annotated_image = draw_landmarks_on_image(mp_image.numpy_view(), detection_result)
     
-        cv2.imshow("resultado",annotated_image)
-        #cv2.imshow("imagen", img)
+        #cv2.imshow("resultado",annotated_image)
+        cv2.imshow("imagen", img)
         k = cv2.waitKey(25)
         if (k & 0xFF)==ord('q'):
             break
