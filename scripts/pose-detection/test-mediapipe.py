@@ -37,7 +37,6 @@ if __name__ == '__main__':
     base_options = python.BaseOptions(model_asset_path='../models/pose_landmarker_heavy.task')
     options = vision.PoseLandmarkerOptions(base_options=base_options,output_segmentation_masks=True)
     detector = vision.PoseLandmarker.create_from_options(options)
-    
 
     image = mp.Image.create_from_file("../data/image.jpg")
     detection_result = detector.detect(image)
