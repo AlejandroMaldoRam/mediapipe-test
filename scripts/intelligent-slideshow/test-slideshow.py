@@ -27,6 +27,9 @@ FONT_SIZE = 1
 FONT_THICKNESS = 1
 TEXT_COLOR = (255, 0, 0)  # red
 
+slides = ["../../slides/Diapositiva1.PNG","../../slides/Diapositiva2.PNG",
+          "../../slides/Diapositiva3.PNG","../../slides/Diapositiva4.PNG",
+          "../../slides/Diapositiva5.PNG","../../slides/Diapositiva6.PNG"]
 
 def _normalized_to_pixel_coordinates(
     normalized_x: float, normalized_y: float, image_width: int,
@@ -89,6 +92,12 @@ def visualize(
   return annotated_image
 
 if __name__ == '__main__':
+    # Load slides
+    slides_imgs = []
+    for f in slides:
+       img = cv2.imread(f)
+       slides_imgs.append(img)
+    
     options = FaceDetectorOptions(base_options=BaseOptions(model_asset_path=model_path),running_mode=VisionRunningMode.VIDEO)
     with FaceDetector.create_from_options(options) as detector:
         # Open Video capture
@@ -96,17 +105,43 @@ if __name__ == '__main__':
 
         i = 0
         period = 25
+        slide_time = [40,80,120,160,200]
+        face_counter = 0
         while cap.isOpened():
             frame_timestamp_ms = i*period
             ret, img = cap.read()
+            area_img = img.shape[0]*img.shape[1]
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img)
             #landmarker.detect_async(mp_image, frame_timestamp_ms)
             face_detector_result = detector.detect_for_video(mp_image, frame_timestamp_ms)
-            #detection_result = detector.detect(mp_image)
-            annotated_image = visualize(mp_image.numpy_view(), face_detector_result)
         
+            if len(face_detector_result.detections)>0:
+                #print("{} caras detectadas.".format(len(face_detector_result.detections)))
+                for j, detection in enumerate(face_detector_result.detections):
+                    bbox = detection.bounding_box
+                    area = bbox.width*bbox.height
+                    #print("Area cara {}: {}".format(j, 100*area/area_img))
+                    if 100*area/area_img>3.0:
+                       face_counter += 1
+                    else:
+                       face_counter = 0
+            else:
+               face_counter = 0
+            annotated_image = visualize(mp_image.numpy_view(), face_detector_result)
             cv2.imshow("resultado",annotated_image)
-            #cv2.imshow("imagen", img)
+            if face_counter<slide_time[0]: #aproxx 2 seconds
+                cv2.imshow("slides", slides_imgs[0])
+            elif face_counter<slide_time[1]:
+                cv2.imshow("slides", slides_imgs[2])
+            elif face_counter<slide_time[2]:
+                cv2.imshow("slides", slides_imgs[3])
+            elif face_counter<slide_time[3]:
+                cv2.imshow("slides", slides_imgs[4])
+            elif face_counter<slide_time[4]:
+                cv2.imshow("slides", slides_imgs[5]) 
+            else:
+                cv2.imshow("slides", slides_imgs[0])
+                face_counter = 0
             k = cv2.waitKey(25)
             if (k & 0xFF)==ord('q'):
                 break
