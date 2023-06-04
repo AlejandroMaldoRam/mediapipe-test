@@ -52,7 +52,8 @@ def _normalized_to_pixel_coordinates(
 
 def visualize(
     image,
-    detection_result
+    detection_result,
+    coi = []
 ) -> np.ndarray:
   """Draws bounding boxes and keypoints on the input image and return it.
   Args:
