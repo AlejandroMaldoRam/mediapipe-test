@@ -5,7 +5,7 @@ from mediapipe.tasks.python import vision
 import cv2
 import numpy as np
 
-MODEL_PATH = 'D:\Code\mediapipe-test\models\efficientdet_lite0.tflite'
+MODEL_PATH = 'D:\Code\mediapipe-test\models\efficientdet_lite0_int8.tflite'
 
 MARGIN = 10  # pixels
 ROW_SIZE = 10  # pixels
