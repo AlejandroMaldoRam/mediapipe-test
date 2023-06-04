@@ -50,7 +50,7 @@ if __name__ == '__main__':
     running_mode=VisionRunningMode.VIDEO)
     with PoseLandmarker.create_from_options(options) as landmarker:
         # Open Video capture
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(1)
 
         i = 0
         period = 25

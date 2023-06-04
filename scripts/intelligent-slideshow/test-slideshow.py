@@ -101,11 +101,11 @@ if __name__ == '__main__':
     options = FaceDetectorOptions(base_options=BaseOptions(model_asset_path=model_path),running_mode=VisionRunningMode.VIDEO)
     with FaceDetector.create_from_options(options) as detector:
         # Open Video capture
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(1)
 
         i = 0
         period = 25
-        slide_time = [40,80,120,160,200]
+        slide_time = [60,120,180,240,300]
         face_counter = 0
         while cap.isOpened():
             frame_timestamp_ms = i*period
@@ -120,10 +120,12 @@ if __name__ == '__main__':
                 for j, detection in enumerate(face_detector_result.detections):
                     bbox = detection.bounding_box
                     area = bbox.width*bbox.height
-                    #print("Area cara {}: {}".format(j, 100*area/area_img))
+                    print("Area cara {}: {}".format(j, 100*area/area_img))
                     if 100*area/area_img>3.0:
+                       print("Conteo exitoso")
                        face_counter += 1
                     else:
+                       print("Perdió rastro")
                        face_counter = 0
             else:
                face_counter = 0
