@@ -1,151 +1,118 @@
-# Script for testing the idea of an intelligente slideshow that detects when a person is
-# looking to a camera.
-
-from mediapipe import solutions
-from mediapipe.framework.formats import landmark_pb2
+# Scrip for detecting objects using real time feed.
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
-
-import math
-import numpy as np
 import cv2
-from typing import Tuple, Union
+import numpy as np
 
- # Configure model
-model_path = "../../models/blaze_face_short_range.tflite"
-
-BaseOptions = mp.tasks.BaseOptions
-FaceDetector = mp.tasks.vision.FaceDetector
-FaceDetectorOptions = mp.tasks.vision.FaceDetectorOptions
-VisionRunningMode = mp.tasks.vision.RunningMode
-
+MODEL_PATH = 'D:/Code/mediapipe-test/models/efficientdet_lite0_int8.tflite'
 
 MARGIN = 10  # pixels
 ROW_SIZE = 10  # pixels
 FONT_SIZE = 1
 FONT_THICKNESS = 1
 TEXT_COLOR = (255, 0, 0)  # red
+CLASSES_OF_INTEREST = ['person']
 
-slides = ["../../slides/Diapositiva1.PNG","../../slides/Diapositiva2.PNG",
-          "../../slides/Diapositiva3.PNG","../../slides/Diapositiva4.PNG",
-          "../../slides/Diapositiva5.PNG","../../slides/Diapositiva6.PNG"]
-
-def _normalized_to_pixel_coordinates(
-    normalized_x: float, normalized_y: float, image_width: int,
-    image_height: int) -> Union[None, Tuple[int, int]]:
-  """Converts normalized value pair to pixel coordinates."""
-
-  # Checks if the float value is between 0 and 1.
-  def is_valid_normalized_value(value: float) -> bool:
-    return (value > 0 or math.isclose(0, value)) and (value < 1 or
-                                                      math.isclose(1, value))
-
-  if not (is_valid_normalized_value(normalized_x) and
-          is_valid_normalized_value(normalized_y)):
-    # TODO: Draw coordinates even if it's outside of the image bounds.
-    return None
-  x_px = min(math.floor(normalized_x * image_width), image_width - 1)
-  y_px = min(math.floor(normalized_y * image_height), image_height - 1)
-  return x_px, y_px
-
+SLIDES = ["D:/Code/mediapipe-test/slides/Diapositiva1.PNG",
+              "D:/Code/mediapipe-test/slides/Diapositiva2.PNG",
+              "D:/Code/mediapipe-test/slides/Diapositiva3.PNG",
+              "D:/Code/mediapipe-test/slides/Diapositiva4.PNG",
+              "D:/Code/mediapipe-test/slides/Diapositiva5.PNG",
+              "D:/Code/mediapipe-test/slides/Diapositiva6.PNG"]
 
 def visualize(
     image,
-    detection_result,
-    coi = []
+    detection_result
 ) -> np.ndarray:
-  """Draws bounding boxes and keypoints on the input image and return it.
+  """Draws bounding boxes on the input image and return it.
   Args:
     image: The input RGB image.
     detection_result: The list of all "Detection" entities to be visualize.
   Returns:
     Image with bounding boxes.
   """
-  annotated_image = image.copy()
-  height, width, _ = image.shape
-
   for detection in detection_result.detections:
     # Draw bounding_box
     bbox = detection.bounding_box
     start_point = bbox.origin_x, bbox.origin_y
     end_point = bbox.origin_x + bbox.width, bbox.origin_y + bbox.height
-    cv2.rectangle(annotated_image, start_point, end_point, TEXT_COLOR, 3)
-
-    # Draw keypoints
-    for keypoint in detection.keypoints:
-      keypoint_px = _normalized_to_pixel_coordinates(keypoint.x, keypoint.y,
-                                                     width, height)
-      color, thickness, radius = (0, 255, 0), 2, 2
-      cv2.circle(annotated_image, keypoint_px, thickness, color, radius)
+    cv2.rectangle(image, start_point, end_point, TEXT_COLOR, 3)
 
     # Draw label and score
     category = detection.categories[0]
     category_name = category.category_name
-    category_name = '' if category_name is None else category_name
     probability = round(category.score, 2)
     result_text = category_name + ' (' + str(probability) + ')'
     text_location = (MARGIN + bbox.origin_x,
                      MARGIN + ROW_SIZE + bbox.origin_y)
-    cv2.putText(annotated_image, result_text, text_location, cv2.FONT_HERSHEY_PLAIN,
+    cv2.putText(image, result_text, text_location, cv2.FONT_HERSHEY_PLAIN,
                 FONT_SIZE, TEXT_COLOR, FONT_THICKNESS)
+  return image
 
-  return annotated_image
+def add_img_to_corner(img1, img2):
+  "This function returns the result of putting the img2 in the lower right corner of img1"
+  img2 = cv2.resize(img2, (0,0), fx=0.5, fy=0.5)
+  h,w,c = img1.shape
+  h2,w2,c3 = img2.shape
+  img1[h-h2:,w-w2:,:] = img2
+  return img1
+
 
 if __name__ == '__main__':
-    # Load slides
     slides_imgs = []
-    for f in slides:
-       img = cv2.imread(f)
-       slides_imgs.append(img)
-    
-    options = FaceDetectorOptions(base_options=BaseOptions(model_asset_path=model_path),running_mode=VisionRunningMode.VIDEO)
-    with FaceDetector.create_from_options(options) as detector:
-        # Open Video capture
-        cap = cv2.VideoCapture(1)
+    for f in SLIDES:
+        img = cv2.imread(f)
+        slides_imgs.append(img)
 
+    BaseOptions = mp.tasks.BaseOptions
+    ObjectDetector = mp.tasks.vision.ObjectDetector
+    ObjectDetectorOptions = mp.tasks.vision.ObjectDetectorOptions
+    VisionRunningMode = mp.tasks.vision.RunningMode
+
+    options = ObjectDetectorOptions(
+        base_options=BaseOptions(model_asset_path=MODEL_PATH),
+        max_results=5,
+        running_mode=VisionRunningMode.VIDEO,
+        category_allowlist=CLASSES_OF_INTEREST,
+        score_threshold=0.75)
+    
+    with ObjectDetector.create_from_options(options) as detector:
+        # Open Video capture
+        cap = cv2.VideoCapture(0)
         i = 0
         period = 25
-        slide_time = [60,120,180,240,300]
-        face_counter = 0
+        detections_counter = 0
+        undetected_counter = 0
+
         while cap.isOpened():
             frame_timestamp_ms = i*period
             ret, img = cap.read()
-            area_img = img.shape[0]*img.shape[1]
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img)
-            #landmarker.detect_async(mp_image, frame_timestamp_ms)
-            face_detector_result = detector.detect_for_video(mp_image, frame_timestamp_ms)
-        
-            if len(face_detector_result.detections)>0:
-                #print("{} caras detectadas.".format(len(face_detector_result.detections)))
-                for j, detection in enumerate(face_detector_result.detections):
-                    bbox = detection.bounding_box
-                    area = bbox.width*bbox.height
-                    print("Area cara {}: {}".format(j, 100*area/area_img))
-                    if 100*area/area_img>3.0:
-                       print("Conteo exitoso")
-                       face_counter += 1
-                    else:
-                       print("Perdió rastro")
-                       face_counter = 0
+            detection_result = detector.detect_for_video(mp_image, frame_timestamp_ms)
+            annotated_image = visualize(mp_image.numpy_view(), detection_result)
+            if len(detection_result.detections)>0:
+              detections_counter += 1
+              undetected_counter = 0
             else:
-               face_counter = 0
-            annotated_image = visualize(mp_image.numpy_view(), face_detector_result)
-            cv2.imshow("resultado",annotated_image)
-            if face_counter<slide_time[0]: #aproxx 2 seconds
-                cv2.imshow("slides", slides_imgs[0])
-            elif face_counter<slide_time[1]:
-                cv2.imshow("slides", slides_imgs[2])
-            elif face_counter<slide_time[2]:
-                cv2.imshow("slides", slides_imgs[3])
-            elif face_counter<slide_time[3]:
-                cv2.imshow("slides", slides_imgs[4])
-            elif face_counter<slide_time[4]:
-                cv2.imshow("slides", slides_imgs[5]) 
+              undetected_counter += 1
+              if undetected_counter>3:
+                detections_counter = 0
+            
+            if detections_counter<15:
+              annotated_img2 = add_img_to_corner(slides_imgs[0], annotated_image)
+            elif detections_counter<30:
+              annotated_img2 = add_img_to_corner(slides_imgs[2], annotated_image)
+            elif detections_counter<45:
+              annotated_img2 = add_img_to_corner(slides_imgs[3], annotated_image)
+            elif detections_counter<60:
+              annotated_img2 = add_img_to_corner(slides_imgs[4], annotated_image)
+            elif detections_counter<75:
+              annotated_img2 = add_img_to_corner(slides_imgs[5], annotated_image)
             else:
-                cv2.imshow("slides", slides_imgs[0])
-                face_counter = 0
-            k = cv2.waitKey(25)
+              annotated_img2 = add_img_to_corner(slides_imgs[0], annotated_image)
+            cv2.imshow("Presentación", annotated_img2)
+            k = cv2.waitKey(period)
             if (k & 0xFF)==ord('q'):
                 break
             i+=1
