@@ -14,12 +14,15 @@ FONT_THICKNESS = 1
 TEXT_COLOR = (255, 0, 0)  # red
 CLASSES_OF_INTEREST = ['person']
 
-SLIDES = ["D:/Code/mediapipe-test/slides/Diapositiva1.PNG",
-              "D:/Code/mediapipe-test/slides/Diapositiva2.PNG",
-              "D:/Code/mediapipe-test/slides/Diapositiva3.PNG",
-              "D:/Code/mediapipe-test/slides/Diapositiva4.PNG",
-              "D:/Code/mediapipe-test/slides/Diapositiva5.PNG",
-              "D:/Code/mediapipe-test/slides/Diapositiva6.PNG"]
+SLIDES = ["D:\code\mediapipe-test\slides\MOBF2023_v2\Diapositiva1.PNG",
+              "D:\code\mediapipe-test\slides\MOBF2023_v2\Diapositiva2.PNG",
+              "D:\code\mediapipe-test\slides\MOBF2023_v2\Diapositiva3.PNG",
+              "D:\code\mediapipe-test\slides\MOBF2023_v2\Diapositiva4.PNG",
+              "D:\code\mediapipe-test\slides\MOBF2023_v2\Diapositiva5.PNG",
+              "D:\code\mediapipe-test\slides\MOBF2023_v2\Diapositiva6.PNG",
+              "D:\code\mediapipe-test\slides\MOBF2023_v2\Diapositiva7.PNG",
+              "D:\code\mediapipe-test\slides\MOBF2023_v2\Diapositiva8.PNG",
+              "D:\code\mediapipe-test\slides\MOBF2023_v2\Diapositiva9.PNG"]
 
 def visualize(
     image,
@@ -99,18 +102,25 @@ if __name__ == '__main__':
               if undetected_counter>3:
                 detections_counter = 0
             
-            if detections_counter<15:
+            if detections_counter<30:
               annotated_img2 = add_img_to_corner(slides_imgs[0], annotated_image)
-            elif detections_counter<30:
-              annotated_img2 = add_img_to_corner(slides_imgs[2], annotated_image)
-            elif detections_counter<45:
-              annotated_img2 = add_img_to_corner(slides_imgs[3], annotated_image)
             elif detections_counter<60:
+              annotated_img2 = add_img_to_corner(slides_imgs[1], annotated_image)
+            elif detections_counter<90:
+              annotated_img2 = add_img_to_corner(slides_imgs[3], annotated_image)
+            elif detections_counter<120:
               annotated_img2 = add_img_to_corner(slides_imgs[4], annotated_image)
-            elif detections_counter<75:
+            elif detections_counter<150:
               annotated_img2 = add_img_to_corner(slides_imgs[5], annotated_image)
+            elif detections_counter<180:
+              annotated_img2 = add_img_to_corner(slides_imgs[6], annotated_image)
+            elif detections_counter<210:
+              annotated_img2 = add_img_to_corner(slides_imgs[7], annotated_image)
+            elif detections_counter<240:
+              annotated_img2 = add_img_to_corner(slides_imgs[8], annotated_image)
             else:
               annotated_img2 = add_img_to_corner(slides_imgs[0], annotated_image)
+            annotated_img2 = cv2.resize(annotated_img2, (0,0), fx=0.5, fy=0.5)
             cv2.imshow("Presentación", annotated_img2)
             k = cv2.waitKey(period)
             if (k & 0xFF)==ord('q'):
