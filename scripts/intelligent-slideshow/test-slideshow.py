@@ -55,10 +55,10 @@ def visualize(
 
 def add_img_to_corner(img1, img2):
   "This function returns the result of putting the img2 in the lower right corner of img1"
-  img2 = cv2.resize(img2, (0,0), fx=0.5, fy=0.5)
+  img2 = cv2.resize(img2, (0,0), fx=0.8, fy=0.8)
   h,w,c = img1.shape
   h2,w2,c3 = img2.shape
-  img1[h-h2:,w-w2:,:] = img2
+  img1[:h2,:w2,:] = img2
   return img1
 
 
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     
     with ObjectDetector.create_from_options(options) as detector:
         # Open Video capture
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(2)
         i = 0
         period = 25
         detections_counter = 0
